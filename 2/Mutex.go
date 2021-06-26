@@ -10,17 +10,20 @@ package main
 import "sync"
 
 var counter int
+var l sync.Mutex
 
+func incr() {
+	l.Lock()
+	counter++
+	l.Unlock()
+}
 func main() {
 	var wg sync.WaitGroup
-	var l sync.Mutex
 	for i := 0; i < 1000; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			l.Lock()
-			counter++
-			l.Unlock()
+			incr()
 		}()
 	}
 	wg.Wait()

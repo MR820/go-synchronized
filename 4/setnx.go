@@ -15,12 +15,19 @@ import (
 	"github.com/go-redis/redis"
 )
 
-func incr() {
-	client := redis.NewClient(&redis.Options{
+var client *redis.Client
+
+func init() {
+	c := redis.NewClient(&redis.Options{
 		Addr:     "node01:6379",
 		Password: "",
 		DB:       0,
+		PoolSize: 100,
 	})
+	client = c
+}
+
+func incr() {
 
 	var lockKey = "counter_lock"
 	var counterKey = "counter"
@@ -28,8 +35,7 @@ func incr() {
 	resp := client.SetNX(lockKey, 1, time.Second*5)
 	lockSuccess, err := resp.Result()
 	if err != nil || !lockSuccess {
-		fmt.Println(err, "lock result:", lockSuccess)
-		//time.Sleep(time.Second)
+		fmt.Println(err, "lock result: ", lockSuccess)
 		//incr()
 		return
 	}
@@ -40,16 +46,15 @@ func incr() {
 		resp := client.Set(counterKey, cntValue, 0)
 		_, err := resp.Result()
 		if err != nil {
-			println("set value error!")
+			panic("set value error!")
 		}
 	}
-	println("current counter is", cntValue)
 	delResp := client.Del(lockKey)
 	unlockSuccess, err := delResp.Result()
 	if err == nil && unlockSuccess > 0 {
-		println("unlock success!")
 	} else {
-		println("unlock failed", err)
+		panic("unlock failed")
+
 	}
 }
 
@@ -63,4 +68,9 @@ func main() {
 		}()
 	}
 	wg.Wait()
+	getResp := client.Get("counter")
+	cntValue, err := getResp.Int64()
+	if err == nil || err == redis.Nil {
+		println(cntValue)
+	}
 }
