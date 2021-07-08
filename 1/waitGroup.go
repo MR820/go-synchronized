@@ -7,17 +7,26 @@
 
 package main
 
-import "sync"
+import (
+	"sync"
+	"sync/atomic"
+)
 
-var counter int
+var counter int64
+
+func incr() {
+	for i := 0; i < 10; i++ {
+		atomic.AddInt64(&counter, 1)
+	}
+}
 
 func main() {
 	var wg sync.WaitGroup
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 10000; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			counter++
+			incr()
 		}()
 	}
 	wg.Wait()
