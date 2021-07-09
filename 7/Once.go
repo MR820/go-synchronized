@@ -1,33 +1,35 @@
 /**
  * Createby GoLand
  * User xzw jsjxzw@163.com
- * Date 2021/6/25
- * Time 下午3:42
+ * Date 2021/7/9
+ * Time 上午10:15
  */
 
 package main
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 var counter int
 
-func incr(l *sync.Mutex) {
-	l.Lock()
+func incr() {
 	for i := 0; i < 10; i++ {
 		counter++
 	}
-	l.Unlock()
 }
+
 func main() {
-	var l sync.Mutex
 	var wg sync.WaitGroup
+	var once sync.Once
 	for i := 0; i < 1000; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			incr(&l)
+			once.Do(incr)
 		}()
 	}
 	wg.Wait()
-	println(counter)
+	fmt.Println(counter)
 }

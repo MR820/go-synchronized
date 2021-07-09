@@ -41,7 +41,9 @@ func incr() {
 		incr()
 		return
 	}
-	counter++
+	for i := 0; i < 10; i++ {
+		counter++
+	}
 	l.UnLock()
 }
 
